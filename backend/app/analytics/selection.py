@@ -85,10 +85,12 @@ def select_day_ahead_forecasts(
     return selected
 
 
-def expected_intervals(first_day: date, last_day: date) -> list[datetime]:
-    """Every half-hour delivery interval start (UTC) from first_day to last_day
-    inclusive, in UK local days. Clock-change days give 46 or 50 intervals,
-    which falls out of stepping in UTC between local midnights.
+def expected_intervals(
+    first_day: date, last_day: date, step: timedelta = INTERVAL
+) -> list[datetime]:
+    """Every delivery interval start (UTC) from first_day to last_day
+    inclusive, in UK local days. Clock-change days get 46/50 half-hours
+    (23/25 hours), which falls out of stepping in UTC between local midnights.
     """
     start = datetime.combine(first_day, time(0), tzinfo=LONDON).astimezone(timezone.utc)
     end = datetime.combine(
@@ -98,5 +100,21 @@ def expected_intervals(first_day: date, last_day: date) -> list[datetime]:
     t = start
     while t < end:
         out.append(t)
-        t += INTERVAL
+        t += step
+    return out
+
+
+def hourly_actuals(half_hourly: dict[datetime, float]) -> dict[datetime, float]:
+    """Average FUELHH half-hours (each an average MW over 30 min) into hourly
+    average MW, to line up with WINDFOR, which is published hourly.
+
+    An hour is only kept when both halves exist; one half is not treated as
+    the whole hour.
+    """
+    out = {}
+    for t, v in half_hourly.items():
+        if t.minute == 0:
+            second = half_hourly.get(t + INTERVAL)
+            if second is not None:
+                out[t] = (v + second) / 2
     return out

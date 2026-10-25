@@ -199,3 +199,27 @@ def test_summary_of_empty_period():
 def test_percentile_matches_linear_interpolation():
     assert percentile([0.0, 10.0], 0.5) == 5.0
     assert percentile([1.0, 2.0, 3.0, 4.0, 5.0], 0.9) == pytest.approx(4.6)
+
+
+# --- hourly alignment ---------------------------------------------------------
+
+from datetime import timedelta  # noqa: E402
+
+from app.analytics.selection import hourly_actuals  # noqa: E402
+
+
+def test_hourly_actuals_average_both_halves():
+    a = {utc(2026, 1, 10, 0, 0): 1000.0, utc(2026, 1, 10, 0, 30): 1200.0}
+    assert hourly_actuals(a) == {utc(2026, 1, 10, 0, 0): 1100.0}
+
+
+def test_hourly_actuals_drop_hours_with_a_missing_half():
+    a = {utc(2026, 1, 10, 0, 0): 1000.0, utc(2026, 1, 10, 1, 30): 900.0}
+    assert hourly_actuals(a) == {}
+
+
+@pytest.mark.parametrize("day,count", [
+    (date(2026, 1, 15), 24), (date(2026, 3, 29), 23), (date(2026, 10, 25), 25),
+])
+def test_hourly_interval_counts(day, count):
+    assert len(expected_intervals(day, day, step=timedelta(hours=1))) == count
