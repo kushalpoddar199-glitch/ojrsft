@@ -197,7 +197,7 @@ cd frontend && npm run build          # type-check + production build
 | Backend tests (`pytest`) | 45 passed |
 | Frontend tests (`vitest`) | 8 passed |
 | Production build | Succeeds |
-| Docker images | Not yet built. The development sandbox could not reach Docker Hub, so the Dockerfiles are untested. |
+| Docker images | Built and run with `docker compose up --build` (Docker Desktop on macOS, Apple silicon). Dashboard and `/api/health` verified on http://localhost:8080. |
 
 ## Deployment
 

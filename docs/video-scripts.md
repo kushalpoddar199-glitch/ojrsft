@@ -34,7 +34,7 @@ This is a pilot on one month of national wind data. It measures forecast error i
 ## Part 2: Technical review (target 4:45, hard max 5:00)
 
 **[0:00, README architecture diagram]**
-The app is a React frontend and a FastAPI backend on one origin; on Vercel the API runs as a Python function. The backend makes two upstream calls, FUELHH and WINDFOR stream, caches the raw data in memory, and serves one endpoint, `/api/analysis`. Every chart and table reads from that single response, so the views can't disagree.
+The app is a React frontend and a FastAPI backend on one origin. On Vercel the frontend is served statically and the API runs as a Python function; locally, `docker compose up` runs the same pair behind nginx. The backend makes two upstream calls, FUELHH and WINDFOR stream, caches the raw data in memory, and serves one endpoint, `/api/analysis`. Every chart and table reads from that single response, so the views can't disagree.
 
 **[0:35, data findings]**
 I profiled the real payloads before writing the client.
@@ -66,5 +66,4 @@ One filter state in `App` drives a fetch hook, which cancels a superseded reques
 - The cache is per instance, so a serverless cold start costs about 1.5 seconds.
 - The 80% range is in-sample.
 - The bias is unexplained with this data.
-- The Docker images still need a build check outside my sandbox, which couldn't reach Docker Hub.
 - AI assistance is disclosed in the README.
