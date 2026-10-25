@@ -2,11 +2,11 @@
 
 A pilot web app for a UK utility's day-ahead procurement team. For every delivery hour bought in January 2026, it shows which national wind forecast was actually available when the purchase was made. It then measures how far that forecast was from what the wind delivered.
 
-**Live app:** _not yet deployed_ (see [Deployment](#deployment))
+**Live app:** https://ojrsft-api.vercel.app · API docs: https://ojrsft-api.vercel.app/docs
 
 ![Dashboard](docs/dashboard.png)
 
-_Screenshot of the running app against live Elexon data. Taken in a sandbox where Google Fonts was blocked, so it uses the fallback font._
+_The deployed app on live Elexon data (25 Oct 2026), with a tooltip open on one hour._
 
 ## The problem
 
@@ -146,7 +146,7 @@ frontend/
     App.test.tsx              vitest: loading/error/empty/partial states, helpers
   Dockerfile, nginx.conf      Static build served by nginx, /api proxied to backend
 docker-compose.yml            Local full stack on http://localhost:8080
-vercel.json, requirements.txt Vercel build and Python function config
+vercel.json, requirements.txt Vercel framework pin, rewrites and Python function config
 docs/                         Screenshot, video scripts
 ```
 
@@ -201,10 +201,16 @@ cd frontend && npm run build          # type-check + production build
 
 ## Deployment
 
-The app deploys to Vercel as a single project. The React build is served as static files, and FastAPI runs as a Python serverless function on the same domain, so no CORS or API URL configuration is needed.
+Live at **https://ojrsft-api.vercel.app**, deployed from `main` on Vercel as a single project:
 
-1. Import this repository at vercel.com/new. No settings need changing; `vercel.json` defines the build.
-2. Open the deployment URL and confirm that `/api/health` responds and the dashboard loads.
+| Path | Served by |
+|---|---|
+| `/`, `/assets/*`, `/favicon.svg` | Static Vite build (`frontend/dist`) from the CDN |
+| `/api/*`, `/docs`, `/openapi.json` | FastAPI, as the Python function `api/index.py` |
+
+Both share one domain, so there is no CORS or API URL configuration. `vercel.json` pins `"framework": "vite"`. Without it, Vercel can detect FastAPI and apply its FastAPI preset, which sends every request to the Python app and drops the static build, so `/` returns `{"detail":"Not Found"}`. The rewrites then forward only the API paths to the function.
+
+To deploy a fork: import the repository at vercel.com/new and keep the defaults. Then check that `/`, `/api/health` and `/docs` respond. The first request to a fresh instance takes about 2 seconds while it loads Elexon data.
 
 ## Known limitations
 
